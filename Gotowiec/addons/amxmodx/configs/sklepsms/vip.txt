@@ -1,0 +1,18 @@
+<style> body { background-image: url(http://how2play.pl/wp-content/uploads/2016/01/AK_47-and-AWP-redline-csgo-wallpaper-1920x1080.jpg); background-attachment: fixed; background-position: center; font-family: Verdana; color: white; font-size: 18px; } b { color: #C0D9D9; }
+</style>
+
+<h1>Co posiada VIP?</h1>
+<ul>
+	<li>100 kevlara co runde</li>
+	<li>nozyczki do rozbrajania co runde</li>
+	<li>menu z wyborem broni (M4, AK, AWP) od 3 rundy</li>
+	<li>dodatkowe zdrowie za zabojstwo (+5 za zwykle, +10 za headshota)</li>
+	<li>+200$ za podlozenie/rozbrojenie bomby</li>
+	<li>zmniejszona cena za klucz do skrzynek (1.00 Euro)</li>
+	<li>1% szans na trafienie skrzynki po zabojstwie</li>
+	<li>1% szans na trafienie klucza po zabojstwie</li>
+	<li>zwiekszone 2x szanse na trafienie skrzynki pod koniec mapy</li>
+	<li>status VIP w tabeli wynikow</li>
+	<li>Prefix [VIP] na czacie</li>
+	<li>pokazywany online pod komenda /vips</li>
+</ul>
