@@ -157,7 +157,7 @@ public WybierzBron(id) {
 	
 	for(new i = 1; i < 31; i++)
 	{
-		if(CSGO_BLOCKWPNSKINS & (1<<i) || !csgo_get_skinsnum(i))
+		if(!csgo_get_skinsnum(i))
 			continue;
 			
 		csgo_get_short_weaponname(i, szNazwaBroni, 15);

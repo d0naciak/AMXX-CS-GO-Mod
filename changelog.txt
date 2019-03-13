@@ -24,3 +24,9 @@
 	- zmieniono dzia³anie logów
 	- dodano cene klucza do menu
 	- usunieto reklamy d0naciak.pl (teraz tylko d0naciak)
+1.0.2
+	- usuniêto natywy csgo_get_*_nvaultid
+	- dodano natywy csgo_is_user_data_loaded, csgo_set/get_vault_data
+	- poprawiono rynek
+	- usunieto stala CSGO_BLOCKEDWPNS, dzieki czemu mozna dodawac skiny do granatow
+	

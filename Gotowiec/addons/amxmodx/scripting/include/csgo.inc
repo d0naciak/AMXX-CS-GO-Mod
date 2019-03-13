@@ -4,7 +4,11 @@
 #define _csgo_included
 
 #include <ColorChat>
-#define CSGO_BLOCKWPNSKINS ((1<<2)|(1<<4)|(1<<6)|(1<<9)|(1<<25))
+
+#define NVAULT_RANGI 0
+#define NVAULT_SKINY 1
+#define NVAULT_SKRZYNKI 2
+#define NVAULT_MISJE 3
 
 /*
 Opis:
@@ -543,51 +547,45 @@ native csgo_set_user_euro(id, iEuro);
 
 /*
 Opis:
-	Zwraca index pliku nVault z rangami
+	Zwraca 1 gdy dane gracza zostaly wczytane, 0 jezeli nie zostaly
 	
 Parametry: 
-	...
+	id - index gracza
 	
 Zwraca:
-	index pliku nVault z rangami
+	1 gdy dane gracza zostaly wczytane, 0 jezeli nie zostaly
 */
-native csgo_get_ranks_vaultid();
+native csgo_is_user_data_loaded(id);
 
 /*
 Opis:
-	Zwraca index pliku nVault ze skinami
+	Zwraca dane gracza z danego pliku nVault do tablicy
 	
 Parametry: 
-	...
+	iKtoryPlikVault - w ktorym pliku ma szukac?
+	const szKluczVault[] - klucz nvault
+	szDaneVault[] - tablica, do ktorej zwroce zostana dane 
+	iLen - dlugosc tablicy szDaneVault
 	
 Zwraca:
-	index pliku nVault ze skinami
+	1 gdy dane gracza zostaly wczytane, 0 jezeli nic nie znaleziono
 */
-native csgo_get_skins_vaultid();
+native csgo_get_nvault_data(iKtoryPlikVault, const szKluczVault[], szDaneVault[], iLen);
+
 
 /*
 Opis:
-	Zwraca index pliku nVault ze skrzynkami
+	Ustawia dane gracza w danym pliku nVault
 	
 Parametry: 
-	...
+	iKtoryPlikVault - na ktorym pliku nvault pracowac?
+	const szKluczVault[] - klucz nvault
+	const szDaneVault[] - dane, jakie maja byc ustawione
 	
 Zwraca:
-	index pliku nVault ze skrzynkami
-*/
-native csgo_get_crates_vaultid();
-
-/*
-Opis:
-	Zwraca index pliku nVault z misjami
-	
-Parametry: 
 	...
-	
-Zwraca:
-	index pliku nVault z misjami
 */
-native csgo_get_missions_vaultid();
+native csgo_set_nvault_data(iKtoryPlikVault, const szKluczVault[], const szDaneVault[]);
 
 
 /*
