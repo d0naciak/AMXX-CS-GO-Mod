@@ -25,7 +25,7 @@ public plugin_init()
 	
 	g_pCvarWymuszajHaslo = register_cvar("accounts_forceregistering", "2");
 	g_pCvarInfoOSetInfo = register_cvar("accounts_infoaboutsetinfo", "2");
-	g_pCvarPoJakimCzasieOdradzac = register_cvar("accounts_timetorespawn", "10.0");
+	g_pCvarPoJakimCzasieOdradzac = register_cvar("accounts_timetorespawn", "25.0");
 
 	register_concmd("acc_resetpassword", "cmd_UsunHaslo", ADMIN_IMMUNITY, "<nick>");
 	register_concmd("acc_checkpassword", "cmd_SprawdzHaslo", ADMIN_IMMUNITY, "<nick>");
@@ -38,9 +38,8 @@ public plugin_init()
 	register_menucmd(register_menuid("#Team_Select_Spect"), 51, "menu_WybralDruzyne");
 	register_menucmd(register_menuid("#Terrorist_Select"), MENU_KEY_1|MENU_KEY_2|MENU_KEY_3|MENU_KEY_4|MENU_KEY_5, "menu_WybralStroj");
 	register_menucmd(register_menuid("#CT_Select"), MENU_KEY_1|MENU_KEY_2|MENU_KEY_3|MENU_KEY_4|MENU_KEY_5, "menu_WybralStroj");
-	//register_clcmd("say /haslo", "cmd_Haslo");
-	register_clcmd("say", "cmd_Czat");
-	register_clcmd("say_team", "cmd_Czat");
+	register_clcmd("say", "cmd_Blokada");
+	register_clcmd("say_team", "cmd_Blokada");
 	register_clcmd("chooseteam", "cmd_WybierzTeam");
 	register_clcmd("jointeam", "cmd_Blokada");
 
@@ -49,13 +48,9 @@ public plugin_init()
 
 
 	register_clcmd("say /konto", "cmd_Konto");
-	//register_clcmd("WpiszHaslo", "cmd_HasloWpisane");
-	//register_clcmd("UstawHaslo", "cmd_NoweHasloWpisane");
-	//register_clcmd("PowtorzHaslo", "cmd_NoweHasloPowtorzone");
-	
-	/*new iVault = nvault_open("Konta_donaciak");
-	nvault_prune(iVault, 0, get_systime() - (86400 * 30));
-	nvault_close(iVault);*/
+	register_clcmd("WpiszHaslo", "cmd_HasloWpisane");
+	register_clcmd("UstawHaslo", "cmd_NoweHasloWpisane");
+	register_clcmd("PowtorzHaslo", "cmd_NoweHasloPowtorzone");
 }
 
 public plugin_natives() {
@@ -69,12 +64,10 @@ public nat_CzyGraczJestZalogowany(id) {
 public client_connect(id) {
 	g_bHasloWpisane[id] = false;
 	g_iTryb[id] = 0;
-	g_iOstatniTrybPrzyWejsciu[id] = -1;
-	copy(g_szOstatnioWpisaneHaslo[id], 31, "");
+	g_iOstatniTrybPrzyWejsciu[id] = 0;
 }
 
 public client_authorized(id) {
-	//client_connect(id); //bezpieczniej?
 	set_user_info(id, "_vgui_menus", "1");
 }
 /*
@@ -123,30 +116,25 @@ bool:CzyMaHaslo(id)
 {
 	new iVault = nvault_open("Konta_donaciak");
 	new szNick[32]; get_user_name(id, szNick, 31);
-	new szHaslo[32], bool:bCzyMaHaslo = bool:nvault_get(iVault, szNick, szHaslo, 31);
-	
-	if(!bCzyMaHaslo) {
-		nvault_close(iVault);
-		
+	new szHaslo[32];
+
+	if(!nvault_get(iVault, szNick, szHaslo, 31)) {
 		if(get_pcvar_num(g_pCvarWymuszajHaslo) == 2) {
 			g_iOstatniTrybPrzyWejsciu[id] = 1;
 
 			Rejestracja(id, szNick);
 			Display_Fade(id, 2, 2, 0x0004, 0, 0, 0, 255);
 		} else {
-			g_iOstatniTrybPrzyWejsciu[id] = 0;
 			ZalogujGracza(id);
 		}
 	} else {
-		
-		nvault_touch(iVault, szNick);
-		nvault_close(iVault);
-		
 		new szHasloInfo[32];
 		get_user_info(id, "_pw", szHasloInfo, 31);
 
 		if(equal(szHaslo, szHasloInfo)) {
 			g_iOstatniTrybPrzyWejsciu[id] = 3;
+
+			//ColorChat(id, GREEN, "[KONTO]^x01 Wczytano haslo z klienta gracza :)");
 			ZalogujGracza(id);
 		} else {
 			g_iOstatniTrybPrzyWejsciu[id] = 2;
@@ -155,6 +143,8 @@ bool:CzyMaHaslo(id)
 			Display_Fade(id, 2, 2, 0x0004, 0, 0, 0, 255);
 		}
 	}
+
+	nvault_close(iVault);
 }
 
 Rejestracja(id, const szNick[32]) {
@@ -190,12 +180,13 @@ public Rejestracja_Handler(id, iMenu, iItem) {
 		case 0: {
 			remove_task(id + TASK_LOGOWANIE);
 			menu_destroy(iMenu);
-			show_menu(id, 1023, " ", 1);
+
+			client_cmd(id, "messagemode UstawHaslo");
 			
-			ColorChat(id, GREEN, "[KONTO]^x01 Nacisnij^x03 Y (say)^x01 i wpisz haslo poprzez komende^x03 /haslo");
-			ColorChat(id, GREEN, "[KONTO]^x01 Np. jezeli jako haslo chcesz ustawic^x03 123^x01, to wpisz^x03 /haslo 123");
-			ColorChat(id, GREEN, "[KONTO]^x01 Haslo musi posiadac^x03 od 3 do 32 znakow!");
+			ColorChat(id, GREEN, "[KONTO]^x01 Wpisz teraz haslo, jakie chcesz ustawic.");
+			ColorChat(id, GREEN, "[KONTO]^x01 Haslo moze posiadac maksymalnie^x03 32 znaki!");
 			ColorChat(id, GREEN, "[KONTO]^x01 Uwaznie sprawdzaj co wpisujesz!");
+			show_menu(id, 1023, " ", 1);
 		}
 
 		case 1: {
@@ -203,60 +194,47 @@ public Rejestracja_Handler(id, iMenu, iItem) {
 		}
 	}
 }
-	
-public SprawdzHaslo(id, szHaslo[]) {
-	switch(g_iTryb[id]) {
-		case 1: {
-			if(!strlen(g_szOstatnioWpisaneHaslo[id])) {
-				if(strlen(szHaslo) < 3) {
-					ColorChat(id, GREEN, "[KONTO]^x01 Haslo musi posiadac conajmniej 3 znaki. Wpisz je jeszcze raz.");
-					return;
-				}
-				
-				copy(g_szOstatnioWpisaneHaslo[id], 31, szHaslo);
-				for(new i = 0; i < 3; i++) {
-					ColorChat(id, GREEN, "[KONTO]^x01 Dla potwierdzenia wpisz haslo jeszcze raz.");
-				}
-			} else {
-				if(equal(g_szOstatnioWpisaneHaslo[id], szHaslo)) {
-					new iVault = nvault_open("Konta_donaciak"), szNick[32];
-					get_user_name(id, szNick, 31);
-					nvault_set(iVault, szNick, szHaslo);
-					nvault_close(iVault);
-					
-					ColorChat(id, GREEN, "[KONTO]^x01 Wszystko przebieglo pomyslnie!");
-					ColorChat(id, GREEN, "[KONTO]^x01 Twoje haslo to:^x03 %s", szHaslo);
 
-					ZalogujGracza(id);
-				} else {
-					copy(g_szOstatnioWpisaneHaslo[id], 31, "");
-					ColorChat(id, GREEN, "[KONTO]^x01 Obydwa hasla nie zgadzaja sie! Sprobuj ponownie.");
-				}
-			}
-		}
-
-		case 2: {
-			if(g_bHasloWpisane[id]) {
-				return;
-			}
-
-			new iVault = nvault_open("Konta_donaciak");
-			new szHasloGracza[32], szNick[32];
-			
-			get_user_name(id, szNick, 31);
-			nvault_get(iVault, szNick, szHasloGracza, 31);
-			nvault_close(iVault);
-			
-			if(!equal(szHasloGracza, szHaslo)) {
-				ColorChat(id, GREEN, "[KONTO]^x01 Wpisane haslo jest nieprawidlowe! Sprobuj ponownie...");
-			} else {
-				ColorChat(id, GREEN, "[KONTO]^x01 Wpisano poprawne haslo :)");
-				ZalogujGracza(id);
-			}
-		}
+public cmd_NoweHasloWpisane(id) {
+	if(g_iTryb[id] != 1) {
+		return PLUGIN_HANDLED;
 	}
 
-	return;
+	read_argv(1, g_szOstatnioWpisaneHaslo[id], 31);
+	client_cmd(id, "messagemode PowtorzHaslo");
+
+	for(new i = 0; i < 3; i++) {
+		ColorChat(id, GREEN, "[KONTO]^x01 Wpisz haslo jeszcze raz.");
+	}
+	
+	return PLUGIN_HANDLED;
+}
+
+public cmd_NoweHasloPowtorzone(id) {
+	if(g_iTryb[id] != 1) {
+		return PLUGIN_HANDLED;
+	}
+
+	new szHaslo[32];
+	read_argv(1, szHaslo, 31);
+
+	if(equal(g_szOstatnioWpisaneHaslo[id], szHaslo)) {
+		new iVault = nvault_open("Konta_donaciak"), szNick[32];
+		get_user_name(id, szNick, 31);
+		nvault_set(iVault, szNick, szHaslo);
+		nvault_close(iVault);
+		
+		ColorChat(id, GREEN, "[KONTO]^x01 Wszystko przebieglo pomyslnie!");
+		ColorChat(id, GREEN, "[KONTO]^x01 Twoje haslo to:^x03 %s", szHaslo);
+
+		ZalogujGracza(id);
+	} else {
+		client_cmd(id, "messagemode UstawHaslo");
+
+		ColorChat(id, GREEN, "[KONTO]^x01 Obydwa hasla nie zgadzaja sie! Sprobuj ponownie.");
+	}
+	
+	return PLUGIN_HANDLED;
 }
 
 Logowanie(id, const szNick[32]) {
@@ -281,16 +259,43 @@ public Logowanie_Handler(id, iMenu, iItem) {
 		case 0: {
 			remove_task(id + TASK_LOGOWANIE);
 			menu_destroy(iMenu);
-			show_menu(id, 1023, " ", 1);
+
+			client_cmd(id, "messagemode WpiszHaslo");
 			
-			ColorChat(id, GREEN, "[KONTO]^x01 Nacisnij^x03 Y (say)^x01 i wpisz swoje haslo poprzez komende^x03 /haslo");
-			ColorChat(id, GREEN, "[KONTO]^x01 Czyli, jezeli Twoje haslo to^x03 123^x01, to wpisz^x03 /haslo 123");
+			ColorChat(id, GREEN, "[KONTO]^x01 Wpisz teraz haslo, jakie jest zarezerwowane na Twoim nicku.");
+			show_menu(id, 1023, " ", 1);
 		}
 
 		case 1: {
 			server_cmd("kick #%d ^"Nie znasz hasla!^"", get_user_userid(id));
 		}
 	}
+}
+
+
+public cmd_HasloWpisane(id) {
+	if(g_bHasloWpisane[id] || g_iTryb[id] != 2) {
+		return PLUGIN_HANDLED;
+	}
+	
+	new iVault = nvault_open("Konta_donaciak");
+	new szHasloWpisane[32], szHaslo[32], szNick[32];
+	
+	get_user_name(id, szNick, 31);
+	
+	read_argv(1, szHasloWpisane, 31);
+	nvault_get(iVault, szNick, szHaslo, 31);
+	nvault_close(iVault);
+	
+	if(!equal(szHaslo, szHasloWpisane)) {
+		client_cmd(id, "messagemode WpiszHaslo");
+		ColorChat(id, GREEN, "[KONTO]^x01 Wpisane haslo jest nieprawidlowe! Sprobuj ponownie...");
+	} else {
+		ColorChat(id, GREEN, "[KONTO]^x01 Wpisano poprawne haslo :)");
+		ZalogujGracza(id);
+	}
+	
+	return PLUGIN_HANDLED;
 }
 
 ZalogujGracza(id) {
@@ -303,11 +308,11 @@ ZalogujGracza(id) {
 		} else {
 			set_task(0.1, "task_MenuDruzyn", id + TASK_MENUDRUZYN);
 		}
-
-		set_pdata_int(id, 365, 1);
-		g_bHasloWpisane[id] = true;
 	}
 
+	set_pdata_int(id, 365, 1);
+
+	g_bHasloWpisane[id] = true;
 	g_iTryb[id] = 0;
 }
 
@@ -315,26 +320,6 @@ public task_MenuDruzyn(id) {
 	client_cmd(id - TASK_MENUDRUZYN, "chooseteam");
 }
 
-public cmd_Czat(id) {
-	new szHaslo[64];
-	read_args(szHaslo, 63);
-	remove_quotes(szHaslo);
-	trim(szHaslo);
-
-	if(equal(szHaslo, "/haslo", 6)) {
-		replace(szHaslo, 63, "/haslo", "");
-		trim(szHaslo);
-
-		SprawdzHaslo(id, szHaslo);
-		return PLUGIN_HANDLED;
-	}
-
-	if(!g_bHasloWpisane[id]) {
-		return PLUGIN_HANDLED;
-	}
-
-	return PLUGIN_CONTINUE;
-}
 
 public cmd_Blokada(id) {
 	if(!g_bHasloWpisane[id]) {
@@ -378,10 +363,6 @@ public cmd_GotowyDoGry(id) {
 	}
 
 	switch(g_iOstatniTrybPrzyWejsciu[id]) {
-		case -1: {
-			return PLUGIN_CONTINUE;
-		}
-
 		case 0: {
 			if(get_pcvar_num(g_pCvarWymuszajHaslo) == 1) {
 					ColorChat(id, GREEN, "[KONTO]^x01 Zastrzez swoj nick, aby nikt poza Toba nie mogl na nim wejsc!");
@@ -401,8 +382,6 @@ public cmd_GotowyDoGry(id) {
 				ColorChat(id, GREEN, "[KONTO]^x01 Haslo normalnie nalezy wpisywac co mape, jednak nie musisz tego robic.");
 				ColorChat(id, GREEN, "[KONTO]^x01 Wpisz w konsoli^x04 (pod ~):^x03 setinfo _pw ^"%s^"^x01, aby zapamietac haslo na komputerze.", szHaslo);
 			}
-
-			Display_Fade(id, 1, 0, 0x0000, 0, 0, 0, 255);
 		}
 
 		case 2: {
@@ -417,8 +396,6 @@ public cmd_GotowyDoGry(id) {
 				ColorChat(id, GREEN, "[KONTO]^x01 Nie musisz wpisywac hasla co mape! ");
 				ColorChat(id, GREEN, "[KONTO]^x01 Wpisz w konsoli^x04 (pod ~):^x03 setinfo _pw ^"%s^"^x01, aby zapamietac haslo na komputerze.", szHaslo);
 			}
-
-			Display_Fade(id, 1, 0, 0x0000, 0, 0, 0, 255);
 		}
 
 		case 3: {
@@ -426,11 +403,17 @@ public cmd_GotowyDoGry(id) {
 		}
 	}
 
-	if(get_gametime() <= (g_fCzasRozpoczeciaRundy+get_pcvar_float(g_pCvarPoJakimCzasieOdradzac))) {
-		set_task(2.0, "task_Odrodzenie", id + TASK_ODRODZENIE);
-	}
+	if(g_iOstatniTrybPrzyWejsciu[id] != -1) {
+		if(1 <= g_iOstatniTrybPrzyWejsciu[id] <= 2) {
+			Display_Fade(id, 1, 0, 0x0000, 0, 0, 0, 255);
+		}
 		
-	g_iOstatniTrybPrzyWejsciu[id] = -1;
+		if(get_gametime() <= (g_fCzasRozpoczeciaRundy+get_pcvar_float(g_pCvarPoJakimCzasieOdradzac))) {
+			set_task(2.0, "task_Odrodzenie", id + TASK_ODRODZENIE);
+		}
+		
+		g_iOstatniTrybPrzyWejsciu[id] = -1;
+	}
 
 	return PLUGIN_CONTINUE;
 }
@@ -478,11 +461,11 @@ public Konto_Handler(id, iMenu, iItem)
 
 UstawHaslo(id) {
 	g_iTryb[id] = 1;
-	copy(g_szOstatnioWpisaneHaslo[id], 31, "");
-		
-	ColorChat(id, GREEN, "[KONTO]^x01 Nacisnij^x03 Y (say)^x01 i wpisz haslo poprzez komende^x03 /haslo");
-	ColorChat(id, GREEN, "[KONTO]^x01 Np. jezeli jako haslo chcesz ustawic^x03 123^x01, to wpisz^x03 /haslo 123");
-	ColorChat(id, GREEN, "[KONTO]^x01 Haslo musi posiadac^x03 od 3 do 32 znakow!");
+
+	client_cmd(id, "messagemode UstawHaslo");
+			
+	ColorChat(id, GREEN, "[KONTO]^x01 Wpisz teraz haslo, jakie chcesz ustawic.");
+	ColorChat(id, GREEN, "[KONTO]^x01 Haslo moze posiadac maksymalnie^x03 32 znaki!");
 	ColorChat(id, GREEN, "[KONTO]^x01 Uwaznie sprawdzaj co wpisujesz!");
 }
 
